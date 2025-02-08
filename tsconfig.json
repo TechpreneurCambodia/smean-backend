@@ -16,6 +16,10 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@nestjs/typeorm": ["node_modules/@nestjs/typeorm"],
+      "typeorm": ["node_modules/typeorm"]
+    }
   }
 }

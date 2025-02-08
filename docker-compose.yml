@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: nest_app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5433/mydatabase
+    command: ["npm", "run", "start:dev"]
+    networks:
+      - nest_network
+
+  db:
+    image: postgres:15
+    container_name: nest_db
+    restart: always
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - nest_network
+
+volumes:
+  pgdata:
+
+networks:
+  nest_network:
