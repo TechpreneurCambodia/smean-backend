@@ -1,35 +1,68 @@
 version: '3.8'
+
 services:
-  app:
-    build: .
-    container_name: nest_app
+  dev:
+    container_name: smean_api_dev
+    image: smean-api-dev:1.0.0
+    build:
+      context: .
+      target: development
+      dockerfile: ./Dockerfile
+    command: npm run start:dev
     ports:
       - "3000:3000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5433/mydatabase
-    command: ["npm", "run", "start:dev"]
+      - "9229:9229"
     networks:
-      - nest_network
+      - smean-network
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: always
+    depends_on:
+      - db 
+
+  prod:
+    container_name: smean_api_prod
+    image: smean-api-prod:1.0.0
+    build:
+      context: .
+      target: production
+      dockerfile: ./Dockerfile
+    command: npm run start:prod
+    ports:
+      - "3001:3000"  
+    networks:
+      - smean-network
+    env_file:
+      - .env.prod  
+    restart: unless-stopped
 
   db:
-    image: postgres:15
-    container_name: nest_db
+    image: postgres:latest
+    container_name: db
     restart: always
     ports:
-      - "5433:5433"
+      - "5433:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - nest_network
+      - smean-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "{DATABASE_USER}", "-d", "${DATABASE_NAME}"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
-volumes:
-  pgdata:
 
 networks:
-  nest_network:
+  smean-network:
+    driver: bridge
+
+volumes:
+  postgres_data:  # Named volume for database persistence

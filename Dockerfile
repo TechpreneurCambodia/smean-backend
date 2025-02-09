@@ -1,23 +1,42 @@
-# Use official Node.js image as base
-FROM node:18-alpine
+# Development stage
+FROM node:20-alpine AS development
 
-# Set working directory inside the container
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Copy only package.json and package-lock.json first to leverage Docker cache
 COPY package*.json ./
+RUN npm install glob rimraf
+RUN npm install --only=development
 
-# Ensure dependencies are installed properly
-RUN npm install
+# Set environment variables for PostgreSQL
+ENV POSTGRES_USER=${DATABASE_USER}
+ENV POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+ENV POSTGRES_DB=${DATABASE_NAME}
 
-# Copy the entire project
+# Copy source code and build
 COPY . .
 
-# Build the application
 RUN npm run build
 
-# Expose the port the app runs on
-EXPOSE 3000
+# Production stage
+FROM node:20-alpine AS production
 
-# Start the application
-CMD ["npm", "run", "start:dev"]
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+WORKDIR /usr/src/app
+
+# Copy only package.json and install production dependencies
+COPY package*.json ./
+RUN npm install --only=production
+RUN npm prune --production
+
+# Set environment variables for PostgreSQL
+ENV POSTGRES_USER=${DATABASE_USER}
+ENV POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+ENV POSTGRES_DB=${DATABASE_NAME}
+
+# Copy only the necessary built files
+COPY --from=development /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main"]
