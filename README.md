@@ -10,13 +10,21 @@ This repository handles the backend of the SMEAN platform using NestJS.
 ```bash
 npm install
 ```
+## Setup the environment
+
 
 ## Compile and run the project
 
 There are two ways to compile and run the project from terminal and docker. You can choose the one that suits you best:
 
 ### 1. Running from the console
-
+- Copy the `.env.example` and configure the value based on the database you are using. 
+To copy
+```bash
+cp .env.example .env
+```
+- You will see the file `.env` in the root of your project. Change the value based on your database.
+- Then run:
 ```bash
 # development
 npm run start
@@ -30,6 +38,14 @@ npm run start:prod
 ### 2. Running on the docker
 - First, go to download docker desktop from the official website: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
 <br>**Note**: Make sure you open the docker desktop in the background to run the below command.
+
+- Copy the `.env.example`.
+To copy
+```bash
+cp .env.example .env
+```
+- You will see the file `.env` in the root of your project. (You can change or use the default value)
+
 - If you clone the project for the first time, run the following command:
 ```bash
 # development
