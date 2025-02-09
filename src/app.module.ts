@@ -4,11 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
+import * as path from 'path'; 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // Make the configuration globally available
+      isGlobal: true,                          
+      envFilePath: '.env',                  
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -16,9 +17,10 @@ import { AppService } from './app.service';
         type: 'postgres',
         host: configService.get<string>('DATABASE_HOST'),
         port: configService.get<number>('DATABASE_PORT'),
-        username: configService.get<string>('DATABASE_USERNAME'),
+        username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
+        // url: configService.get<string>('DATABASE_URL'), 
         autoLoadEntities: true,
         synchronize: true,
       }),
