@@ -8,6 +8,8 @@ import { DataSource } from "typeorm";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt-strategy";
+import { GoogleStrategy } from "./utils/google-strategy";
+import { SessionSerializer } from "./utils/serializer";
 
 @Module({
   imports: [
@@ -21,6 +23,10 @@ import { JwtStrategy } from "./jwt-strategy";
   controllers: [AuthController],
   providers: [
     AuthService,
+    UsersRepository,
+    JwtStrategy,
+    GoogleStrategy,
+    SessionSerializer,
     // {
     //   provide: UsersRepository,
     //   useFactory: (dataSource: DataSource) => {
@@ -28,8 +34,6 @@ import { JwtStrategy } from "./jwt-strategy";
     //   },
     //   inject: [DataSource],
     // },
-    UsersRepository,
-    JwtStrategy,
   ],
   exports: [JwtStrategy, PassportModule,],
 })

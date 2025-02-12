@@ -5,12 +5,16 @@ import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as path from 'path'; 
+import { PassportModule } from '@nestjs/passport';
+
 @Module({
   imports: [
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,                          
       envFilePath: '.env',                  
     }),
+    
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -26,7 +30,7 @@ import * as path from 'path';
       }),
       inject: [ConfigService],
     }),
-    AuthModule,
+    PassportModule.register({ session: true }),
   ],
   controllers: [AppController],
   providers: [AppService],
