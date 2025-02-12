@@ -3,7 +3,7 @@ import { IsString, MinLength } from 'class-validator';
 export class SignInDto {
   @IsString()
   @MinLength(4)
-  username: string;
+  usernameOrEmail: string;
 
   @IsString()
   @MinLength(8)

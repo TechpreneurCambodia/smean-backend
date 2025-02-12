@@ -11,6 +11,14 @@ import { User } from "./user.entity";
 
 @Injectable()
 export class AuthService {
+  // findUserByEmail: any;
+  async findUserByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+  findUserByUsername(gemail: string) {
+    throw new Error('Method not implemented.');
+  }
+  
   async findUserById(id: number) {
     const user = await this.usersRepository.findOneBy({ id: id.toString() });
     return user;
@@ -79,6 +87,10 @@ export class AuthService {
     const user = await this.usersRepository.findOne({
       where: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
     });
+    if (user && !password && user.googleId) {
+      return { accessToken: await this.jwtService.sign({ username: user.username }) };
+    }
+    
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const payload = { username: user.username };
@@ -88,9 +100,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
   }
+  
 
   async validateUser(userDetails: UserDetails): Promise<User> {
-    // Implement your user validation logic here
     // For example, find the user in the database and return the user object
     const user = await this.usersRepository.findOne({
       where: { email: userDetails.gemail },
@@ -107,6 +119,8 @@ export class AuthService {
       });
       return await this.usersRepository.save(newUser);
     }
+
+    
     return user;
   }
 }

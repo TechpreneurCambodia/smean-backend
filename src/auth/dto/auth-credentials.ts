@@ -24,4 +24,5 @@ export class AuthCredentialsDto {
   email: string;
 
   roleId?: string;
+  googleId?: string;
 }
