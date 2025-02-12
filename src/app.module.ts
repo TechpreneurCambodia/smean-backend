@@ -6,10 +6,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as path from 'path'; 
 import { PassportModule } from '@nestjs/passport';
+import { AudioController } from './audio/audio.controller';
+import { AudioModule } from './audio/audio.module';
 
 @Module({
   imports: [
     AuthModule,
+    AudioModule,
     ConfigModule.forRoot({
       isGlobal: true,                          
       envFilePath: '.env',                  
@@ -31,8 +34,9 @@ import { PassportModule } from '@nestjs/passport';
       inject: [ConfigService],
     }),
     PassportModule.register({ session: true }),
+    AudioModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AudioController],
   providers: [AppService],
 })
 export class AppModule {}

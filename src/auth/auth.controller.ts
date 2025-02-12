@@ -30,36 +30,35 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async handleGoogleRedirect(@Req() req: Request & { user: UserDetails }) {
     try {
-      // Implement Google OAuth code exchange and return user info
       const user = req.user;
-      const payload = { username: user.username };
 
-      // Check if user exists, if not, register the user
-      let accessToken;
-      try {
-        accessToken = await this.authService.signIn({
-          usernameOrEmail: user.gemail,
-          password: '',
+      // Check if the user exists in the database before trying to register
+      let existingUser = await this.authService.findUserByEmail(user.gemail);
+
+      if (!existingUser) {
+        // User does not exist, so we register them
+        await this.authService.signUp({
+          username: user.username,
+          email: user.gemail,
+          password: '', // Consider handling this properly
         });
-      } catch (error) {
-        if (error.status === 401) {
-          // User does not exist, register the user
-          await this.authService.signUp({
-            username: user.username,
-            email: user.gemail,
-            password: '', // You might want to generate a random password or handle it differently
-          });
-          accessToken = await this.authService.signIn({
-            usernameOrEmail: user.gemail,
-            password: '',
-          });
-        } else {
-          throw error;
-        }
+
+        // Fetch the newly created user
+        existingUser = await this.authService.findUserByEmail(user.gemail);
       }
+
+      // Generate access token
+      const accessToken = await this.authService.signIn({
+        usernameOrEmail: existingUser?.email ?? '',
+        password: '', // Consider handling password logic properly
+      });
 
       return { msg: 'Google OAuth redirect successful', accessToken };
     } catch (error) {
+      if (error.code === 'invalid_grant') {
+        console.error('Invalid grant during Google OAuth redirect:', error);
+        throw new Error('Invalid grant during Google OAuth redirect');
+      }
       console.error('Error during Google OAuth redirect:', error);
       throw new Error('Google OAuth redirect failed');
     }
@@ -69,7 +68,7 @@ export class AuthController {
   user(@Req() req: Request & { user: UserDetails }) {
     if (req.user) {
       return { user: req.user, msg: 'User is authenticated' };
-    }else {
+    } else {
       return { msg: 'User is not authenticated' };
     }
   }
