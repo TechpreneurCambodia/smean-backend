@@ -36,5 +36,6 @@ export class User {
 
   @UpdateDateColumn()
   updated_at: Date;
+  googleId: boolean | null;
   
 }
