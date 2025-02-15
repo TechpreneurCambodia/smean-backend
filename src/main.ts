@@ -14,8 +14,8 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Luyknhom API Documentation')
-    .setDescription('Forsdfds API information')
+    .setTitle('SMEAN API Documentation')
+    .setDescription(' API information')
     .setVersion('1.0')
     .addTag('money')
     .build();
