@@ -9,7 +9,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AudioService } from './audio.service';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { Express } from 'express'; // ✅ Correct import
+import { Express } from 'express';
+import { FILE_UPLOAD_DIR } from 'src/constants';
+import { UploadAudioDto } from './dto/upload-audio.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('audio')
 export class AudioController {
@@ -19,10 +22,10 @@ export class AudioController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/audio',
-        filename: (req, file, cb) => {
+        destination: FILE_UPLOAD_DIR,
+        filename: (_req, file, cb) => {
           const fileExt = extname(file.originalname);
-          const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+          const fileName = `${uuidv4()}${fileExt}`;
           cb(null, fileName);
         },
       }),
@@ -36,7 +39,7 @@ export class AudioController {
   )
   async uploadAudio(
     @UploadedFile() file: Express.Multer.File,
-    @Body() _uploadAudioDto: any,
+    @Body() _uploadAudioDto: UploadAudioDto,
   ) {
     console.log('Uploaded file:', file);
 
