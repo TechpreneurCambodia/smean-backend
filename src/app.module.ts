@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { PassportModule } from '@nestjs/passport';
 import { AudioController } from './audio/audio.controller';
 import { AudioModule } from './audio/audio.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { FILE_UPLOAD_DIR } from './constants';
 
 @Module({
   imports: [
@@ -32,6 +34,10 @@ import { AudioModule } from './audio/audio.module';
     }),
     PassportModule.register({ session: true }),
     AudioModule,
+    MulterModule.register({
+      dest: FILE_UPLOAD_DIR,
+      limits:{ fieldSize: 1000 * 1000 * 10,},
+    }),
   ],
   controllers: [AppController, AudioController],
   providers: [AppService],
