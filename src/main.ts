@@ -6,6 +6,9 @@ import * as passport from 'passport';
 import { User } from './auth/user.entity';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 async function bootstrap() {
   // const app = await NestFactory.create(AppModule);
@@ -20,7 +23,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: { maxAge: 60000 }, // Set to true if using HTTPS
-    })
+    }),
   );
   app.use(passport.initialize());
   app.use(passport.session());
@@ -30,9 +33,10 @@ async function bootstrap() {
   });
 
   passport.deserializeUser((user: User, done) => {
-      done(null, user);
-    });
-  
-  await app.listen(3000);
+    done(null, user); // Change the port number here
+  });
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 }
 bootstrap();
