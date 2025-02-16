@@ -1,6 +1,7 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UploadAudioDto {
-  @IsNotEmpty()
-  file: string;
+@IsOptional()
+@IsString()
+  description?: string;
 }
