@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { Express } from 'express';
+import { UploadAudioDto } from './dto/upload-audio.dto';
 
 @Injectable()
 export class AudioService {
