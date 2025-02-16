@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request, ValidationPipe, UsePipes, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Request, ValidationPipe, UsePipes } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
+import { GoogleOAuthGuard } from './google-oauth.guard';
+import { GoogleDto } from './dto/google.dto';
+import { FacebookOAuthGuard } from './facebook-oauth.guard';
+import { FacebookDto } from './dto/facebook.dto';
 import { AuthGuard } from './auth.guard';
-import { plainToInstance } from 'class-transformer';
-import { UserDto } from 'src/user/dto/user.dto';
 
 @Controller('/auth')
 export class AuthController {
@@ -15,7 +17,7 @@ export class AuthController {
   register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
   }
-  @HttpCode(200)
+
   @Post('/login')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   login(@Body() loginAuthDto: LoginAuthDto) {
@@ -39,8 +41,44 @@ export class AuthController {
   @Get('/me')
   @UseGuards(AuthGuard)
   getMe(@Request() req) {
-    const user = this.authService.getMe(req.user.id);
-    return plainToInstance(UserDto, user);
+    return this.authService.getMe(req.user.id);
+  }
+
+  @Get("/google")
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth(@Request() req) { }
+
+  @Get('/google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  googleAuthRedirect(@Request() req) {
+    const user = req.user;
+    const googleDto = new GoogleDto();
+    googleDto.email = user.email;
+    googleDto.firstName = user.firstName;
+    googleDto.lastName = user.lastName;
+    googleDto.profilePicUrl = user.picture;
+    googleDto.accessToken = user.accessToken;
+    googleDto.username = user.email;
+    const response = this.authService.CreateOrSignInWithGoogle(googleDto);
+    return response;
+  }
+  @Get("/facebook")
+  @UseGuards(FacebookOAuthGuard)
+  async facebookLogin(@Request() req) {
+  }
+
+  @Get("/facebook/callback")
+  @UseGuards(FacebookOAuthGuard)
+  async facebookLoginRedirect(@Request() req) {
+    const user = req.user;
+    const facebookDto = new FacebookDto();
+    facebookDto.facebookId = user.id;
+    facebookDto.email = user.email;
+    facebookDto.firstName = user.firstName;
+    facebookDto.lastName = user.lastName;
+    facebookDto.accessToken = user.accessToken;
+    const response = this.authService.CreateOrSignInWithFacebook(facebookDto);
+    return response;
   }
 
 }

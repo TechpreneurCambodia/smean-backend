@@ -6,12 +6,66 @@ import * as bcrypt from "bcrypt";
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';;
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { GoogleDto } from './dto/google.dto';
+import { FacebookDto } from './dto/facebook.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(private userService: UserService, @InjectRepository(User) private userRepository: Repository<User>, private jwtService: JwtService) { }
+
+  async CreateOrSignInWithFacebook(facebookDto: FacebookDto): Promise<LoginResponseDto>  {
+    let user = await this.userRepository.findOne({ where: { facebookId: facebookDto.facebookId } });
+    if (!user) {
+      // Create a new user if not found
+      user = this.userRepository.create(facebookDto);
+    } else {
+      user.firstName = facebookDto.firstName;
+      user.lastName = facebookDto.lastName;
+      user.accessToken = facebookDto.accessToken;
+    }
+
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.REFRESH_EXPIRE,
+      secret: process.env.REFRESH_SECRET,
+    });
+    user.refreshToken = refreshToken;
+    await this.userRepository.save(user);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+  }
+
+  async CreateOrSignInWithGoogle(googleDto: GoogleDto) : Promise<LoginResponseDto> {
+    let user = await this.userRepository.findOne({
+      where: [{ username: googleDto.email }, { email: googleDto.email }],
+    });
+    if (!user) {
+      // Create a new user if not found
+      user = this.userRepository.create(googleDto);
+    } else {
+      user.firstName = googleDto.firstName;
+      user.lastName = googleDto.lastName;
+      user.profilePicUrl = googleDto.profilePicUrl;
+      // user.accessToken = googleDto.accessToken;
+    }
+
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.REFRESH_EXPIRE,
+      secret: process.env.REFRESH_SECRET,
+    });
+    user.refreshToken = refreshToken;
+    await this.userRepository.save(user);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+  }
+
   async login(loginAuthDto: LoginAuthDto): Promise<LoginResponseDto> {
     const user = await this.userRepository.findOne({
       where: [{ username: loginAuthDto.usernameOrEmail }, { email: loginAuthDto.usernameOrEmail }],
