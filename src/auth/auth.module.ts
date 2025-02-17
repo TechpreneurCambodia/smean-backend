@@ -6,6 +6,8 @@ import { UserModule } from 'src/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
+import { GoogleStrategy } from './google.strategy';
+import { FacebookStrategy } from './facebook.strategy';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { ConfigModule } from '@nestjs/config';
   controllers: [AuthController],
   providers: [
     AuthService,
+    GoogleStrategy,
+    FacebookStrategy,
   ],
   exports: [AuthService],
 })
