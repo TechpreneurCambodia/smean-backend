@@ -1,19 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import * as dotenv from "dotenv";
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
+
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  // const app = await NestFactory.create(AppModule);
-  
-  // Enable CORS Cross Origin Resource Saharing
+  const app = await NestFactory.create(AppModule);
+  const configService = new ConfigService();
+  // Enable CORS Cross Origin Resource Sharing
   app.enableCors({
-    origin: 'http://localhost:3001', // Frontend
+    origin: configService.get('FRONTEND_URL'), 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
     .setTitle('SMEAN API Documentation')

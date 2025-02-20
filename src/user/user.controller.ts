@@ -17,6 +17,8 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/enums/role.enum';
+import { plainToInstance } from 'class-transformer';
+import { UserDto } from './dto/user.dto';
 
 
 @Controller('/users')
@@ -36,15 +38,10 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @UseGuards(AuthGuard)
-  @Get('/homepage')
-  getHomepage() {
-  }
-
   @Patch(':id')
   @UseGuards(AuthGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<UserDto> {
+    return this.userService.update(id, updateUserDto).then(user => plainToInstance(UserDto, user));
   }
 
   @Delete(':id')

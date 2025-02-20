@@ -11,19 +11,35 @@ This repository handles the backend of the SMEAN platform using NestJS.
 npm install
 ```
 ## Setup the environment
-
+- Copy the `.env.example` and configure the value based on the environment you will be using. 
+To copy
+```bash
+cp .env.example .env
+```
+- Generate Secret Keys: Generate a random string for the secret keys by (Open your terminal and run)
+```
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'));"
+```
+- Copy the output and paste it to the `SECRET_KEY` in `.env` file
+- Run the script above again and copy the generated key to the `REFRESH_SECRET` in `.env` file
+![Screenshot 2025-02-17 at 8 17 27 in the evening](https://github.com/user-attachments/assets/156fb8ed-2141-4675-8733-88b5788a8f8a)
 
 ## Compile and run the project
 
 There are two ways to compile and run the project from terminal and docker. You can choose the one that suits you best:
 
 ### 1. Running from the console
-- Copy the `.env.example` and configure the value based on the database you are using. 
-To copy
-```bash
-cp .env.example .env
+
+- In the `.env` in the root of your project, change the value based on your postgres database (If the database name u put is not exists yet, create a new one).
+Example:
 ```
-- You will see the file `.env` in the root of your project. Change the value based on your database.
+# Database Configurations for npm run start:dev
+DATABASE_HOST=localhost
+DATABASE_USER=postgres
+DATABASE_PASSWORD=pich
+DATABASE_PORT=5432
+DATABASE_NAME=postgres
+```
 - Then run:
 ```bash
 # development
@@ -38,30 +54,27 @@ npm run start:prod
 ### 2. Running on the docker
 - First, go to download docker desktop from the official website: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
 <br>**Note**: Make sure you open the docker desktop in the background to run the below command.
-
-- Copy the `.env.example`.
-To copy
-```bash
-cp .env.example .env
+- Change database settings value the`.env` in the root of your project (You can change or use the default value)
 ```
-- You will see the file `.env` in the root of your project. (You can change or use the default value)
-
+DATABASE_HOST=db
+DATABASE_USER=user
+DATABASE_PASSWORD={yourpass}
+DATABASE_PORT=5432
+DATABASE_NAME={yourdb}
+```
 - If you clone the project for the first time, run the following command:
 ```bash
 # development
-docker compose build dev
+docker-compose -f docker-compose.dev.yml build          
 ```
 - If you want to start and run the containers, after building
 ```bash
-docker compose up dev
+docker compose -f docker-compose.dev.yml up         
 ```
 - If you want to stop and remove the containers:
 ```bash
-docker compose down dev
+docker compose -f docker-compose.dev.yml down
 ```
-It seems that there is no existing CONTRIBUTING.md file in the `smean-backend` repository. Here are some basic guidelines for contribution instructions that you can add to your README.md file or create a new CONTRIBUTING.md file:
-
----
 
 ## Contributing
 

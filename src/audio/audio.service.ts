@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,Logger } from '@nestjs/common';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import * as ffmpeg from 'fluent-ffmpeg';
@@ -6,8 +6,10 @@ import * as ffprobeStatic from 'ffprobe-static';
 import { Express } from 'express';
 // import { UploadAudioDto } from './dto/upload-audio.dto';
 
+
 @Injectable()
 export class AudioService {
+  private readonly logger = new Logger(AudioService.name);
   private uploadPath = join(__dirname, '..', '..', 'uploads', 'audio');
 
   constructor() {

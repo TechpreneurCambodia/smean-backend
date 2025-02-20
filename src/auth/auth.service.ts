@@ -9,12 +9,13 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { GoogleDto } from './dto/google.dto';
 import { FacebookDto } from './dto/facebook.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @Injectable()
 export class AuthService {
   constructor(private userService: UserService, @InjectRepository(User) private userRepository: Repository<User>, private jwtService: JwtService) { }
 
-  async CreateOrSignInWithFacebook(facebookDto: FacebookDto) {
+  async CreateOrSignInWithFacebook(facebookDto: FacebookDto): Promise<LoginResponseDto>  {
     let user = await this.userRepository.findOne({ where: { facebookId: facebookDto.facebookId } });
     if (!user) {
       // Create a new user if not found
@@ -30,21 +31,15 @@ export class AuthService {
       secret: process.env.JWT_SECRET,
     });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: process.env.REFRESH_EXPIRE,
       secret: process.env.REFRESH_SECRET,
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-
-    return {
-      message: 'Logged in Successfully',
-      access_token: token,
-      refreshToken: refreshToken,
-      statusCode: HttpStatus.OK,
-    };
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
   }
 
-  async CreateOrSignInWithGoogle(googleDto: GoogleDto) {
+  async CreateOrSignInWithGoogle(googleDto: GoogleDto) : Promise<LoginResponseDto> {
     let user = await this.userRepository.findOne({
       where: [{ username: googleDto.email }, { email: googleDto.email }],
     });
@@ -63,20 +58,15 @@ export class AuthService {
       secret: process.env.JWT_SECRET,
     });
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
+      expiresIn: process.env.REFRESH_EXPIRE,
       secret: process.env.REFRESH_SECRET,
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-
-    return {
-      message: 'Logged in Successfully',
-      access_token: token,
-      refreshToken: refreshToken,
-      statusCode: HttpStatus.OK,
-    };
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
   }
-  async login(loginAuthDto: LoginAuthDto) {
+
+  async login(loginAuthDto: LoginAuthDto): Promise<LoginResponseDto> {
     const user = await this.userRepository.findOne({
       where: [{ username: loginAuthDto.usernameOrEmail }, { email: loginAuthDto.usernameOrEmail }],
     });
@@ -89,21 +79,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Email/Username or Password');
     }
     const payload = { id: user.id, email: user.email, role: user.role }
-    const token = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d', secret: process.env.REFRESH_SECRET, });
+    const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: process.env.REFRESH_EXPIRE, secret: process.env.REFRESH_SECRET, });
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
-    return {
-      message: 'Logged in Successfully',
-      access_token: token,
-      refreshToken: refreshToken,
-      statusCode: HttpStatus.OK,
-    };
-
-
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
   }
+
   async register(createUserDto: CreateUserDto) {
     const existingUser = await this.userService.findByEmail(createUserDto.email);
     if (existingUser) {
@@ -116,9 +100,9 @@ export class AuthService {
 
     const payload = { id: user.id, email: user.email, role: user.role };
 
-    const token = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
 
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d', secret: process.env.REFRESH_SECRET, });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: process.env.REFRESH_EXPIRE, secret: process.env.REFRESH_SECRET, });
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
@@ -131,7 +115,11 @@ export class AuthService {
     };
   }
   async getMe(user: User) {
-    return await this.userService.findOne((user.id));
+    const getUser = await this.userService.findOne(user.id);
+    if (!getUser) {
+      throw new NotFoundException('User not found');
+    }
+    return getUser;
   }
 
   async verifyToken(token: string) {
@@ -157,7 +145,7 @@ export class AuthService {
 
       const newAccessToken = this.jwtService.sign(
         { id: user.id, email: user.email, role: user.role },
-        { expiresIn: '15m', secret: process.env.SECRET_KEY },
+        { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY },
       );
 
       return { access_token: newAccessToken };

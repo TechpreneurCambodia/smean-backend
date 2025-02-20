@@ -6,8 +6,6 @@ import { UserModule } from 'src/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
 import { GoogleStrategy } from './google.strategy';
 import { FacebookStrategy } from './facebook.strategy';
 
@@ -22,7 +20,7 @@ import { FacebookStrategy } from './facebook.strategy';
     JwtModule.register({
       global: true,
       secret: process.env.SECRET_KEY,
-      signOptions: { expiresIn: '15m' },
+      signOptions: { expiresIn: process.env.ACCESS_EXPIRE },
     }),
 
   ],
@@ -30,7 +28,7 @@ import { FacebookStrategy } from './facebook.strategy';
   providers: [
     AuthService,
     GoogleStrategy,
-    FacebookStrategy
+    FacebookStrategy,
   ],
   exports: [AuthService],
 })

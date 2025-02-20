@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request, HttpStatus, Req, ValidationPipe, UsePipes } from '@nestjs/common';
+
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { Controller, Get, Post, Body, Query, UseGuards, Request, ValidationPipe, UsePipes } from '@nestjs/common';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { GoogleOAuthGuard } from './google-oauth.guard';

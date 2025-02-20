@@ -4,25 +4,24 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { GoogleDto } from 'src/auth/dto/google.dto';
 
 @Injectable()
 export class UserService {
   constructor(@InjectRepository(User) private userRepository: Repository<User>) { }
 
-  async create(createUserDto: CreateUserDto | GoogleDto): Promise<User> {
+  async create(createUserDto: CreateUserDto ): Promise<User> {
     const user = this.userRepository.create(createUserDto);
     return await this.userRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
     const users = await this.userRepository.find();
-    return users.map(user => this.removeSensitiveInfo(user));
+    return users;
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.findUserById(id);
-    return this.removeSensitiveInfo(user);
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -33,10 +32,7 @@ export class UserService {
 
     const updatedUser = this.userRepository.merge(user, updateUserDto);
     updatedUser.updatedAt = new Date();
-
-    const savedUser = await this.userRepository.save(updatedUser);
-
-    return this.removeSensitiveInfo(savedUser);
+    return await this.userRepository.save(updatedUser);
   }
 
   async remove(id: string): Promise<void> {
@@ -54,10 +50,4 @@ export class UserService {
     return user;
   }
 
-  private removeSensitiveInfo(user: User): User {
-    delete user.refreshToken;
-    delete user.accessToken;
-    delete user.password;
-    return user;
-  }
 }
