@@ -1,75 +1,109 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# SMEAN Backend
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Smean is a real-time Khmer transcription platform that allows users to effectively transcribe and get key summaries of important meetings through accurate speech-to-text conversion. Through generated insights, searchable archives, and interactive editing, SMEAN enables users to have a more productive and efficient report of each meeting.
+This repository handles the backend of the SMEAN platform using NestJS.
 
 ## Project setup
 
 ```bash
-$ npm install
+npm install
 ```
+## Setup the environment
+- Copy the `.env.example` and configure the value based on the environment you will be using. 
+To copy
+```bash
+cp .env.example .env
+```
+- Generate Secret Keys: Generate a random string for the secret keys by (Open your terminal and run)
+```
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'));"
+```
+- Copy the output and paste it to the `SECRET_KEY` in `.env` file
+- Run the script above again and copy the generated key to the `REFRESH_SECRET` in `.env` file
+![Screenshot 2025-02-17 at 8 17 27 in the evening](https://github.com/user-attachments/assets/156fb8ed-2141-4675-8733-88b5788a8f8a)
 
 ## Compile and run the project
 
+There are two ways to compile and run the project from terminal and docker. You can choose the one that suits you best:
+
+### 1. Running from the console
+
+- In the `.env` in the root of your project, change the value based on your postgres database (If the database name u put is not exists yet, create a new one).
+Example:
+```
+# Database Configurations for npm run start:dev
+DATABASE_HOST=localhost
+DATABASE_USER=postgres
+DATABASE_PASSWORD=pich
+DATABASE_PORT=5432
+DATABASE_NAME=postgres
+```
+- Then run:
 ```bash
 # development
-$ npm run start
+npm run start
 
-# watch mode
-$ npm run start:dev
+# watch mode (Recommended: to view updates without restarting the project)
+npm run start:dev 
 
 # production mode
-$ npm run start:prod
+npm run start:prod
 ```
-
-## Run tests
-
+### 2. Running on the docker
+- First, go to download docker desktop from the official website: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+<br>**Note**: Make sure you open the docker desktop in the background to run the below command.
+- Change database settings value the`.env` in the root of your project (You can change or use the default value)
+```
+DATABASE_HOST=db
+DATABASE_USER=user
+DATABASE_PASSWORD={yourpass}
+DATABASE_PORT=5432
+DATABASE_NAME={yourdb}
+```
+- If you clone the project for the first time, run the following command:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# development
+docker-compose -f docker-compose.dev.yml build          
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+- If you want to start and run the containers, after building
 ```bash
-$ npm install -g mau
-$ mau deploy
+docker compose -f docker-compose.dev.yml up         
+```
+- If you want to stop and remove the containers:
+```bash
+docker compose -f docker-compose.dev.yml down
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Contributing
+
+We welcome contributions to the SMEAN Backend project! Here are some guidelines to help you get started:
+
+1. **Create a Branch**: Create a new branch for your feature.
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+   
+2. **Make Changes**: Implement your changes in the codebase.
+
+3. **Commit Changes**: Commit your changes with a meaningful commit message.
+   ```bash
+   git commit -m "Add feature: description of your feature"
+   ```
+
+4. **Push Changes**: Push your changes.
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+5. **Create a Pull Request**: Open a pull request to the main repository with a description of your changes.
+
+6. **Code Review**: 
+
+7. **Merge**: Once approved, your changes will be merged into the main repository.
+
+---
 
 ## Resources
 
@@ -79,20 +113,6 @@ Check out a few resources that may come in handy when working with NestJS:
 - For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
 - To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
 - Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
