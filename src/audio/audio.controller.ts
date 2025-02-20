@@ -13,6 +13,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Express } from 'express';
 import { FILE_UPLOAD_DIR } from 'src/constants';
+import axios from 'axios';
 import { UploadAudioDto } from './dto/upload-audio.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -55,7 +56,7 @@ export class AudioController {
     if (!file) {
       throw new BadRequestException('No file to upload');
     }
-
-    return this.audioService.saveFileInfo(file);
+    const audioInfo = await this.audioService.saveFileInfo(file);
+    return audioInfo;
   }
 }
