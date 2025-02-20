@@ -34,4 +34,11 @@ export class AudioService {
       mimetype: file.mimetype,
     };
   }
+  saveTranscription(transcription: string) {
+    this.logger.log(`Saving transcription: ${transcription}`);
+    return {
+      message: 'Transcription saved successfully',
+      transcription,
+    };
+  }
 }
