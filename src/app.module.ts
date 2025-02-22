@@ -12,6 +12,8 @@ import { NoteSourceModule } from './note-source/note-source.module';
 import { NoteTranscriptionModule } from './note-transcription/note-transcription.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
   imports: [
     AuthModule,
@@ -38,6 +40,7 @@ import { AppService } from './app.service';
     NoteModule,
     NoteSourceModule,
     NoteTranscriptionModule,
+    HttpModule,
   ],
   controllers: [AppController, UserController, AuthController, AudioController],
   providers: [AppService],

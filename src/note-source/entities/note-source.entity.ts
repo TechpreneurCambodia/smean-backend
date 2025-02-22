@@ -18,7 +18,6 @@ export class NoteSource {
   @CreateDateColumn({name: 'created_at'})
   createdAt: Date;
 
-  @OneToOne(() => Note, { cascade: true, nullable: true })
-  @JoinColumn()
+  @OneToOne(() => Note, note => note.noteSource)
   note: Note;
 }

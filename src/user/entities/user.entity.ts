@@ -1,5 +1,6 @@
 import { Role } from "src/enums/role.enum";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Note } from "src/note/entities/note.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("users")
 export class User {
@@ -50,4 +51,7 @@ export class User {
 
     @Column({ name: 'access_token', nullable: true })
     accessToken?: string;
+
+    @OneToMany(() => Note, note => note.user)
+    notes: Note[];
 }
