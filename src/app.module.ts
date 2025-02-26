@@ -12,6 +12,9 @@ import { NoteSourceModule } from './note-source/note-source.module';
 import { NoteTranscriptionModule } from './note-transcription/note-transcription.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LabelsService } from './labels/labels.service';
+import { LabelsController } from './labels/labels.controller';
+import { LabelsModule } from './labels/labels.module';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
@@ -40,9 +43,10 @@ import { HttpModule } from '@nestjs/axios';
     NoteModule,
     NoteSourceModule,
     NoteTranscriptionModule,
+    LabelsModule,
     HttpModule,
   ],
-  controllers: [AppController, UserController, AuthController, AudioController],
+  controllers: [AppController, UserController, AuthController, AudioController, LabelsController],
   providers: [AppService],
 })
 export class AppModule {}
