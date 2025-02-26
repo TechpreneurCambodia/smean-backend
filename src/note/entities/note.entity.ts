@@ -1,11 +1,12 @@
+import { Label } from 'src/labels/entities/label.entity';
 import { NoteSource } from 'src/note-source/entities/note-source.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, OneToOne, JoinColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
 
-@Entity('notes')
+@Entity()
 export class Note {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => NoteSource, noteSource => noteSource.note, { cascade: true, nullable: true })
   @JoinColumn({ name: 'note_source_id' })
@@ -18,15 +19,20 @@ export class Note {
   @Column({ length: 125 })
   title: string;
 
-  @Column({ type: 'text' })
-  summary: string;
+  @Column()
+  content: string;
 
-  @Column({ name: 'favorited_at', type: 'timestamp', nullable: true })
-  favoritedAt: Date;
+  @Column({ default: false })
+  isFavorite: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @CreateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToMany(() => Label, (label) => label.notes)
+  @JoinTable()
+  labels: Label[];
+
 }
