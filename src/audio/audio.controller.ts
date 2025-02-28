@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Post,
   UploadedFile,
@@ -17,16 +16,16 @@ import { extname, join } from 'path';
 import { Express } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { firstValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import * as FormData from 'form-data';
-import { Readable } from 'stream';
 import { NoteSourceService } from 'src/note-source/note-source.service';
 import { CreateNoteSourceDto } from 'src/note-source/dto/create-note-source.dto';
-import { CreateNoteDto } from 'src/note/dto/create-note.dto';
+import { createReadStream } from 'fs';
 
 @Controller('audio')
 export class AudioController {
+  private uploadUrl = `${process.env.MODEL_URL}/upload`;
   constructor(
     private readonly audioService: AudioService,
     private readonly httpService: HttpService,
@@ -57,7 +56,7 @@ export class AudioController {
         }
         cb(null, true);
       },
-      // limits: { fileSize: 1000 * 1024 * 1024 },
+      limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
   async uploadAudio(
@@ -72,23 +71,12 @@ export class AudioController {
     const fileExt = extname(file.originalname);
     const fileName = `${uuidv4()}${fileExt}`;
     const formData = new FormData();
-
-    // Convert buffer to stream
-    const fileStream = new Readable();
-    fileStream.push(file.buffer);
-    fileStream.push(null);
-
-    formData.append('file', fileStream, {
-      filename: fileName,
-      contentType: file.mimetype,
-    });
+    formData.append('file', createReadStream(file.path), fileName);
 
     try {
-      const response = await firstValueFrom(
+      const response = await lastValueFrom(
         this.httpService.post(`${process.env.MODEL_URL}/upload`, formData, {
-          headers: {
-            ...formData.getHeaders(),
-          },
+          headers: formData.getHeaders(),
         }),
       );
     
@@ -112,5 +100,25 @@ export class AudioController {
       console.error('Error response:', error.response?.data || error.message);
       return { message: 'Error uploading file', error: error.message };
     }
+  }
+
+
+  // this endpoint split the audio file and upload to the flask api
+  @Post('split-and-upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+      }),
+    }),
+  )
+  async splitAndUpload(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      return { message: 'No file uploaded' };
+    }
+
+    const results = await this.audioService.splitAndUpload(file.path, this.uploadUrl);
+    return { message: 'Audio split and uploaded', results };
   }
 }
