@@ -9,9 +9,6 @@ export class Label {
   @Column()
   name: string;
 
-  @Column({ default: false })
-  isFavorite: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
 

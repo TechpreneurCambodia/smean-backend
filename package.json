@@ -45,6 +45,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "typeorm-fixtures-cli": "^4.1.0",
     "uuid": "^11.0.5"
   },
   "devDependencies": {

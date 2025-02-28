@@ -19,8 +19,8 @@ export class Note {
   @Column({ length: 125 })
   title: string;
 
-  @Column()
-  content: string;
+  @Column({ type: 'text' })
+  summary: string;
 
   @Column({ default: false })
   isFavorite: boolean;

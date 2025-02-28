@@ -35,10 +35,19 @@ export class LabelsController {
   @Post()
   async addLabelToNote(
     @Body() addLabelToNoteDto: { noteId: string; labelId: string }
-  ): Promise<void> {
-    const { noteId, labelId } = addLabelToNoteDto;
-    return this.labelsService.addLabelToNote(noteId, labelId);
+  ): Promise<{ message: string }> {
+    try{
+      const { noteId, labelId } = addLabelToNoteDto;
+    }
+    catch (error) {
+      throw new NotFoundException(`Note or Label is invalid`);
+    }
+    
+    await this.labelsService.addLabelToNote(addLabelToNoteDto.noteId, addLabelToNoteDto.labelId);
+    return { message: 'Label added to note successfully' };
+
   }
+
   @Post(':noteId')
   async createLabelForNote(
     @Req() req,
