@@ -51,6 +51,7 @@ export class User {
 
     @Column({ name: 'access_token', nullable: true })
     accessToken?: string;
+    labels: any;
 
     @OneToMany(() => Note, note => note.user)
     notes: Note[];
