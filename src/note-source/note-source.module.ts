@@ -10,9 +10,9 @@ import { UserModule } from 'src/user/user.module';
 import { User } from 'src/user/entities/user.entity';
 import { AudioService } from 'src/audio/audio.service';
 import { NoteService } from 'src/note/note.service';
-
+import { HttpModule } from '@nestjs/axios';
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Note, NoteSource, NoteTranscription]), UserModule],
+  imports: [TypeOrmModule.forFeature([User, Note, NoteSource, NoteTranscription]), UserModule, HttpModule],
   controllers: [NoteSourceController],
   providers: [NoteSourceService, AuthService, AudioService, NoteService],
   exports: [NoteSourceService],
