@@ -7,7 +7,8 @@ import {
   UseInterceptors,
   Request,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  NotFoundException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AudioService } from './audio.service';
@@ -30,7 +31,6 @@ export class AudioController {
     private readonly audioService: AudioService,
     private readonly httpService: HttpService,
     private readonly noteSourceService: NoteSourceService,
-
   ) { }
 
   // this endpoint upload to the flask api
@@ -79,7 +79,7 @@ export class AudioController {
           headers: formData.getHeaders(),
         }),
       );
-    
+
       const fileInfo = await this.audioService.saveFileInfo(file);
       const createNoteSourceDto: CreateNoteSourceDto = {
         content: response.data.content,
@@ -89,7 +89,7 @@ export class AudioController {
         title: response.data.title,
         transcription: response.data.transcription,
       };
-    
+
       const note = await this.noteSourceService.create(createNoteSourceDto, req.user.id);
       console.log('Created note:', note);
       return {
@@ -97,28 +97,73 @@ export class AudioController {
         note: note
       };
     } catch (error) {
+
       console.error('Error response:', error.response?.data || error.message);
-      return { message: 'Error uploading file', error: error.message };
+      throw new NotFoundException('Error uploading file');
+      // return { message: 'Error uploading file', error: error.message };
     }
   }
 
-
   // this endpoint split the audio file and upload to the flask api
   @Post('split-and-upload')
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: join(__dirname, '..', '..', 'uploads', 'audio'),
         filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
       }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('audio/')) {
+          return cb(
+            new BadRequestException('Only audio files are allowed'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
     }),
   )
-  async splitAndUpload(@UploadedFile() file: Express.Multer.File) {
+  async splitAndUpload(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
+  ) {
+    const chunkDuration = Number(req.body.chunkDuration);
     if (!file) {
       return { message: 'No file uploaded' };
     }
 
-    const results = await this.audioService.splitAndUpload(file.path, this.uploadUrl);
-    return { message: 'Audio split and uploaded', results };
+    if (!chunkDuration) {
+      return { message: 'No segment duration provided' };
+    }
+    // the chunk is in seconds format
+    if (chunkDuration != 60 && chunkDuration != 180 && chunkDuration != 300) {
+      throw new BadRequestException('Invalid segment duration. Choose either 1, 3 or 5 minutes.');
+    }
+    // ensure note is rollback if the generated transcripts is failed
+    try {
+      const fileInfo = await this.audioService.saveFileInfo(file);
+      const createNoteSourceDto: CreateNoteSourceDto = {
+        content: "",
+        noteType: "audio",
+        sourceUrl: fileInfo.filePath,
+        summary: "",
+        title: "Audio",
+        transcription: "",
+      };
+
+      const note = await this.noteSourceService.create(createNoteSourceDto, req.user.id);
+      const results = await this.audioService.splitAndUpload(note.data.id, file.path, this.uploadUrl, chunkDuration);
+      console.log('Created note:', note);
+
+      return {
+        message: 'Audio split and uploaded',
+        note: note.data,
+        transcriptions: results
+      };
+    } catch (error) {
+      console.error('Error splitting and uploading audio:', error.message);
+      throw new NotFoundException('Error splitting and uploading audio');
+    }
   }
 }

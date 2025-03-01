@@ -3,7 +3,7 @@ import { NoteSource } from 'src/note-source/entities/note-source.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, OneToOne, JoinColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
 
-@Entity()
+@Entity('notes')
 export class Note {
   @PrimaryGeneratedColumn('uuid')
   id: string;
