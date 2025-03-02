@@ -3,10 +3,10 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } f
 
 @Entity('note_transcriptions')
 export class NoteTranscription {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @ManyToOne(() => Note, (note) => note.id)
+  @ManyToOne(() => Note, note => note.transcriptions)
   note: Note;
 
   @Column({name:'start_at', default: 0 })
@@ -22,7 +22,7 @@ export class NoteTranscription {
   content: string;
 
   @Column({ name: 'summary', type: 'text', nullable: true })
-  summary: string;
+  summary?: string;
 
   @CreateDateColumn({name: 'created_at'})
   createdAt: Date;
