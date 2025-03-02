@@ -9,14 +9,20 @@ export class NoteTranscription {
   @ManyToOne(() => Note, (note) => note.id)
   note: Note;
 
-  @Column({name:'start_at', length: 125 })
-  startAt: string;
+  @Column({name:'start_at', default: 0 })
+  startAt: number;
 
-  @Column({name: 'end_at', length: 125 })
-  endAt: string;
+  @Column({name: 'end_at' , default: 0})
+  endAt: number;
 
-  @Column({ length: 125 })
+  @Column({name: 'file_path', length: 255, nullable: true})
+  filePath: string;
+  
+  @Column({ name: 'content', type: 'text' , nullable: true})
   content: string;
+
+  @Column({ name: 'summary', type: 'text', nullable: true })
+  summary: string;
 
   @CreateDateColumn({name: 'created_at'})
   createdAt: Date;

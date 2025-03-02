@@ -5,9 +5,11 @@ import { Note } from './entities/note.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { User } from 'src/user/entities/user.entity';
+import { NoteDto } from './dto/note-response.dto';
 
 @Injectable()
 export class NoteService {
+  noteTranscriptionRepository: any;
   constructor(
     @InjectRepository(Note)
     private readonly noteRepository: Repository<Note>,
@@ -48,6 +50,30 @@ export class NoteService {
         email: note.user.email,
       },
     };
+  }
+
+  async getNoteSummary(id: string): Promise<CreateNoteDto> {
+    const note = await this.noteRepository.findOne({ where: { id } });
+    if (!note) {
+      throw new Error('Note not found');
+    }
+
+    return {
+      id: note.id,
+      title: note.title,
+      summary: note.summary,
+    };
+  }
+
+  async getNoteTranscriptions(id: string): Promise<NoteDto[]> {
+    const transcriptions = await this.noteTranscriptionRepository.find({ where: { note: { id } } });
+    return transcriptions.map(transcription => ({
+      startAt: transcription.startAt,
+      endAt: transcription.endAt,
+      content: transcription.content,
+      summary: transcription.summary,
+      filePath: transcription.filePath,
+    }));
   }
 
   async update(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
