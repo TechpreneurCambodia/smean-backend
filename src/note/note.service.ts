@@ -5,17 +5,17 @@ import { Note } from './entities/note.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { User } from 'src/user/entities/user.entity';
-import { NoteDto } from './dto/note-response.dto';
+import { NoteTranscriptionsDto } from './dto/note-transcriptions.dto';
 
 @Injectable()
 export class NoteService {
-  noteTranscriptionRepository: any;
+
   constructor(
     @InjectRepository(Note)
     private readonly noteRepository: Repository<Note>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async create(userId: string, createNoteDto: CreateNoteDto): Promise<Note> {
     const user = await this.userRepository.findOne({ where: { id: userId }, select: ['id', 'firstName', 'lastName', 'email'] });
@@ -25,74 +25,50 @@ export class NoteService {
     return this.noteRepository.save(note);
   }
 
-  async findAll(): Promise<any[]> {
-    const notes = await this.noteRepository.find({ relations: ['user', 'labels'] });
-    return notes.map(note => ({
-      ...note,
-      user: {
-        id: note.user.id,
-        firstName: note.user.firstName,
-        lastName: note.user.lastName,
-        email: note.user.email,
-      },
-    }));
+  async findAll(userId: string): Promise<any[]> {
+    const notes = await this.noteRepository.find({ where: { user: { id: userId } }, relations: ['labels', 'noteSource'] });
+    return notes;
   }
 
-  async findOne(id: string): Promise<any> {
-    const note = await this.noteRepository.findOne({ where: { id }, relations: ['user', 'labels'] });
+  async findOne(userId: string, id: string): Promise<any> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } }, relations: ['noteSource', 'labels'] });
     if (!note) throw new NotFoundException('Note not found');
-    return {
-      ...note,
-      user: {
-        id: note.user.id,
-        firstName: note.user.firstName,
-        lastName: note.user.lastName,
-        email: note.user.email,
-      },
-    };
+    return note;
   }
 
-  async getNoteSummary(id: string): Promise<CreateNoteDto> {
-    const note = await this.noteRepository.findOne({ where: { id } });
+  async getNoteSummary(userId: string, id: string): Promise<CreateNoteDto> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
     if (!note) {
       throw new Error('Note not found');
     }
 
-    return {
-      id: note.id,
-      title: note.title,
-      summary: note.summary,
-    };
+    return note;
   }
 
-  async getNoteTranscriptions(id: string): Promise<NoteDto[]> {
-    const transcriptions = await this.noteTranscriptionRepository.find({ where: { note: { id } } });
-    return transcriptions.map(transcription => ({
-      startAt: transcription.startAt,
-      endAt: transcription.endAt,
-      content: transcription.content,
-      summary: transcription.summary,
-      filePath: transcription.filePath,
-    }));
+  async getNoteTranscriptions(userId: string, id: string): Promise<{ note: any, transcriptions: NoteTranscriptionsDto[] }> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } }, relations: ['transcriptions'] });
+    if (!note) throw new NotFoundException('Note not found');
+
+    return { note: note, transcriptions: note.transcriptions };
   }
 
-  async update(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
-    const note = await this.noteRepository.findOne({ where: { id } });
+  async update(userId: string, id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
     if (!note) throw new NotFoundException('Note not found');
 
     Object.assign(note, updateNoteDto);
     return this.noteRepository.save(note);
   }
 
-  async remove(id: string): Promise<void> {
-    const note = await this.noteRepository.findOne({ where: { id } });
+  async remove(userId: string, id: string): Promise<void> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
     if (!note) throw new NotFoundException('Note not found');
 
     await this.noteRepository.delete(id);
   }
 
-  async markNoteAsFavorite(id: string): Promise<Note> {
-    const note = await this.noteRepository.findOne({ where: { id } });
+  async markNoteAsFavorite(userId: string, id: string): Promise<Note> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } } });
     if (!note) throw new NotFoundException('Note not found');
 
     note.isFavorite = !note.isFavorite;
