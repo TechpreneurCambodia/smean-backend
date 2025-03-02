@@ -128,13 +128,13 @@ export class AudioController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req,
   ) {
-    const chunkDuration = Number(req.body.chunkDuration);
+    let chunkDuration = Number(req.body.chunkDuration);
     if (!file) {
       return { message: 'No file uploaded' };
     }
 
     if (!chunkDuration) {
-      return { message: 'No segment duration provided' };
+      chunkDuration = 60;
     }
     // the chunk is in seconds format
     if (chunkDuration != 60 && chunkDuration != 180 && chunkDuration != 300) {
