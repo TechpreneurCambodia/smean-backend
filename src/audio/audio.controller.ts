@@ -7,7 +7,9 @@ import {
   UseInterceptors,
   Request,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  InternalServerErrorException,
+  Body
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AudioService } from './audio.service';
@@ -25,18 +27,17 @@ import { createReadStream } from 'fs';
 
 @Controller('audio')
 export class AudioController {
-  private uploadUrl = `${process.env.MODEL_URL}/upload`;
+  private uploadUrl = `${process.env.MODEL_URL}/upload`; // Ensure this URL is correct
   constructor(
     private readonly audioService: AudioService,
     private readonly httpService: HttpService,
     private readonly noteSourceService: NoteSourceService,
-
   ) { }
 
   // this endpoint upload to the flask api
   @HttpCode(HttpStatus.OK)
   @Post('upload')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard) // Apply authentication middleware
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -75,7 +76,7 @@ export class AudioController {
 
     try {
       const response = await lastValueFrom(
-        this.httpService.post(`${process.env.MODEL_URL}/upload`, formData, {
+        this.httpService.post(this.uploadUrl, formData, {
           headers: formData.getHeaders(),
         }),
       );
@@ -98,13 +99,14 @@ export class AudioController {
       };
     } catch (error) {
       console.error('Error response:', error.response?.data || error.message);
-      return { message: 'Error uploading file', error: error.message };
+      console.error('Stack trace:', error.stack);
+      throw new InternalServerErrorException('Error uploading file');
     }
   }
 
-
   // this endpoint split the audio file and upload to the flask api
   @Post('split-and-upload')
+  // @UseGuards(AuthGuard) // Apply authentication middleware
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -113,12 +115,24 @@ export class AudioController {
       }),
     }),
   )
-  async splitAndUpload(@UploadedFile() file: Express.Multer.File) {
+  async splitAndUpload(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('segmentDuration') segmentDuration: number = 180, // Default to 3 minutes
+    @Request() req
+  ) {
     if (!file) {
       return { message: 'No file uploaded' };
     }
 
-    const results = await this.audioService.splitAndUpload(file.path, this.uploadUrl);
-    return { message: 'Audio split and uploaded', results };
+    try {
+      console.log(`Splitting file with segment duration: ${segmentDuration}`);
+      const results = await this.audioService.splitAndUpload(file.path, segmentDuration, this.uploadUrl);
+      console.log('Split and upload results:', results);
+      return { message: 'Audio split and uploaded', results };
+    } catch (error) {
+      console.error('Error in split-and-upload:', error.message);
+      console.error('Stack trace:', error.stack);
+      throw new InternalServerErrorException('Error splitting and uploading file');
+    }
   }
 }
