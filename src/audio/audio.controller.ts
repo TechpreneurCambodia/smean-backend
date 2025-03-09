@@ -23,6 +23,7 @@ import * as FormData from 'form-data';
 import { NoteSourceService } from 'src/note-source/note-source.service';
 import { CreateNoteSourceDto } from 'src/note-source/dto/create-note-source.dto';
 import { createReadStream } from 'fs';
+import { DataSource } from 'typeorm';
 
 @Controller('audio')
 export class AudioController {
@@ -31,6 +32,7 @@ export class AudioController {
     private readonly audioService: AudioService,
     private readonly httpService: HttpService,
     private readonly noteSourceService: NoteSourceService,
+    private readonly dataSource: DataSource,
   ) { }
 
   // this endpoint upload to the flask api
@@ -140,6 +142,10 @@ export class AudioController {
     if (chunkDuration != 60 && chunkDuration != 180 && chunkDuration != 300) {
       throw new BadRequestException('Invalid segment duration. Choose either 1, 3 or 5 minutes.');
     }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     // ensure note is rollback if the generated transcripts is failed
     try {
       const fileInfo = await this.audioService.saveFileInfo(file);
@@ -148,22 +154,25 @@ export class AudioController {
         noteType: "audio",
         sourceUrl: fileInfo.filePath,
         summary: "",
-        title: "Audio",
+        title: fileInfo.originalName,
         transcription: "",
       };
 
       const note = await this.noteSourceService.create(createNoteSourceDto, req.user.id);
       const results = await this.audioService.splitAndUpload(note.data.id, file.path, this.uploadUrl, chunkDuration);
       console.log('Created note:', note);
-
+      await queryRunner.commitTransaction();
       return {
         message: 'Audio split and uploaded',
         note: note.data,
         transcriptions: results
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       console.error('Error splitting and uploading audio:', error.message);
       throw new NotFoundException('Error splitting and uploading audio');
+    }finally {
+      await queryRunner.release();
     }
   }
 }
