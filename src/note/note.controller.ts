@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards, NotFoundException, Query } from '@nestjs/common';
 import { NoteService } from './note.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -6,6 +6,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Note } from './entities/note.entity';
 import { NoteDto } from './dto/note-response.dto';
 import { NoteTranscriptionsDto } from './dto/note-transcriptions.dto';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Controller('notes')
 @UseGuards(AuthGuard)
@@ -32,8 +33,8 @@ export class NoteController {
   }
 
   @Get()
-  async findAll(@Request() req) {
-    const notes = await this.noteService.findAll(req.user.id);
+  async findAll(@Request() req, @Query() paginationDto: PaginationDto) {
+    const notes = await this.noteService.findAll(req.user.id, paginationDto);
     return { message: "Notes retrieved successfully", notes };
   }
 

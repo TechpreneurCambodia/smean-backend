@@ -6,6 +6,7 @@ import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { User } from 'src/user/entities/user.entity';
 import { NoteTranscriptionsDto } from './dto/note-transcriptions.dto';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class NoteService {
@@ -25,8 +26,23 @@ export class NoteService {
     return this.noteRepository.save(note);
   }
 
-  async findAll(userId: string): Promise<any[]> {
-    const notes = await this.noteRepository.find({ where: { user: { id: userId } }, relations: ['labels', 'noteSource'] });
+  async findAll(userId: string, paginationDto: PaginationDto): Promise<any[]> {
+    const { limit, offset = 0, sortBy = 'updatedAt', sortOrder = 'ASC' } = paginationDto;
+
+    const findOptions: any = {
+      where: { user: { id: userId } },
+      relations: ['labels', 'noteSource'],
+      skip: offset,
+      order: {
+        [sortBy]: sortOrder,
+      },
+    };
+
+    if (limit && limit > 0) {
+      findOptions.take = limit;
+    }
+
+    const notes = await this.noteRepository.find(findOptions);
     return notes;
   }
 

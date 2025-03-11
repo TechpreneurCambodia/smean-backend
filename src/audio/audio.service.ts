@@ -58,13 +58,14 @@ export class AudioService {
     const filePath = join(this.uploadPath, file.filename);
     try {
       const duration = await this.getAudioDuration(filePath);
+      const durationInSeconds = typeof duration === 'number' ? duration.toFixed(2) : '0';
       return {
         message: 'Audio file uploaded successfully',
         filePath: `/uploads/audio/${file.filename}`,
         originalName: file.originalname,
         size: file.size,
         mimetype: file.mimetype,
-        duration: duration ? parseFloat(duration.toFixed(2)) : 0 + 's',
+        duration: `${durationInSeconds}s`
       };
     } catch (error) {
       this.logger.error(`Error saving file info: ${error.message}`);
