@@ -61,11 +61,11 @@ export class NoteService {
     return note;
   }
 
-  async getNoteTranscriptions(userId: string, id: string): Promise<{ note: any, transcriptions: NoteTranscriptionsDto[] }> {
-    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } }, relations: ['transcriptions'] });
+  async getNoteTranscriptions(userId: string, id: string): Promise<{ note: any, transcriptions: NoteTranscriptionsDto[], noteSource: any }> {
+    const note = await this.noteRepository.findOne({ where: { id, user: { id: userId } }, relations: ['transcriptions', 'noteSource'] });
     if (!note) throw new NotFoundException('Note not found');
 
-    return { note: note, transcriptions: note.transcriptions };
+    return { note: note, transcriptions: note.transcriptions, noteSource: note.noteSource };
   }
 
   async update(userId: string, id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {

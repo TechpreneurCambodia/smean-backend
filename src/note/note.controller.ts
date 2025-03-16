@@ -52,7 +52,7 @@ export class NoteController {
 
   @Get(':id/note-transcriptions')
   async getNoteTranscriptions(@Request() req, @Param('id') id: string): Promise<{ message: string, note: any, data: NoteTranscriptionsDto[] }> {
-    const { note, transcriptions } = await this.noteService.getNoteTranscriptions(req.user.id, id);
+    const { note, transcriptions, noteSource } = await this.noteService.getNoteTranscriptions(req.user.id, id);
     return {
       message: "Get Transcriptions successfully",
       note: {
@@ -60,7 +60,8 @@ export class NoteController {
         title: note.title,
         summary: note.summary,
         createdAt: note.createdAt,
-        updatedAt: note.updatedAt
+        updatedAt: note.updatedAt, 
+        noteSource: noteSource
       },
       data: transcriptions
     };

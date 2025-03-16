@@ -117,19 +117,13 @@ export class AudioController {
       }),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('audio/')) {
-          return cb(
-            new BadRequestException('Only audio files are allowed'),
-            false,
-          );
+          return cb(new BadRequestException('Only audio files are allowed'), false);
         }
         cb(null, true);
       },
     }),
   )
-  async splitAndUpload(
-    @UploadedFile() file: Express.Multer.File,
-    @Request() req,
-  ) {
+  async splitAndUpload(@UploadedFile() file: Express.Multer.File, @Request() req) {
     let chunkDuration = Number(req.body.chunkDuration);
     if (!file) {
       return { message: 'No file uploaded' };
@@ -138,15 +132,14 @@ export class AudioController {
     if (!chunkDuration) {
       chunkDuration = 60;
     }
-    // the chunk is in seconds format
-    if (chunkDuration != 60 && chunkDuration != 180 && chunkDuration != 300) {
-      throw new BadRequestException('Invalid segment duration. Choose either 1, 3 or 5 minutes.');
+    if (![60, 180, 300].includes(chunkDuration)) {
+      throw new BadRequestException('Invalid segment duration. Choose 1, 3, or 5 minutes.');
     }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    // ensure note is rollback if the generated transcripts is failed
     try {
       const fileInfo = await this.audioService.saveFileInfo(file);
       const createNoteSourceDto: CreateNoteSourceDto = {
@@ -165,13 +158,13 @@ export class AudioController {
       return {
         message: 'Audio split and uploaded',
         note: note.data,
-        transcriptions: results
+        transcriptions: results,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.error('Error splitting and uploading audio:', error.message);
       throw new NotFoundException('Error splitting and uploading audio');
-    }finally {
+    } finally {
       await queryRunner.release();
     }
   }

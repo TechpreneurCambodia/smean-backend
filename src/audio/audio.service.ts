@@ -62,7 +62,7 @@ export class AudioService {
       return {
         message: 'Audio file uploaded successfully',
         filePath: `/uploads/audio/${file.filename}`,
-        originalName: file.originalname,
+        originalName: file.originalname.split('.')[0],
         size: file.size,
         mimetype: file.mimetype,
         duration: `${durationInSeconds}s`
@@ -78,23 +78,31 @@ export class AudioService {
     if (!existsSync(chunkDir)) {
       mkdirSync(chunkDir, { recursive: true });
     }
-
+  
+    // 🛑 Convert WebM to WAV first, if needed
+    let processedFilePath = filePath;
+    if (filePath.endsWith('.webm')) {
+      const wavFilePath = filePath.replace('.webm', '.wav');
+      await this.convertWebMToWav(filePath, wavFilePath);
+      processedFilePath = wavFilePath;
+    }
+  
     let chunkDuration = chunkDurationReq;
     console.log('chunkDuration', chunkDuration);
     let startTime = 0;
     let chunkIndex = 0;
     const uploadResults: { chunk: string; response: any }[] = [];
-
-    const totalDuration = await this.getAudioDuration(filePath);
+  
+    const totalDuration = await this.getAudioDuration(processedFilePath);
     const uploadPromises: Promise<any>[] = [];
-
+  
     while (startTime < totalDuration) {
       const chunkPath = `${chunkDir}/chunk-${chunkIndex}.wav`;
-
+  
       const chunkPromise = new Promise(async (resolve, reject) => {
         try {
           await new Promise((resolve, reject) => {
-            ffmpeg(filePath)
+            ffmpeg(processedFilePath)
               .setStartTime(startTime)
               .setDuration(Math.min(chunkDuration, totalDuration - startTime))
               .output(chunkPath)
@@ -105,31 +113,31 @@ export class AudioService {
               })
               .run();
           });
-
+  
           if (!existsSync(chunkPath)) {
             this.logger.warn(`Chunk file does not exist: ${chunkPath}`);
             return resolve(null);
           }
-
+  
           const formData = new FormData();
           formData.append('file', createReadStream(chunkPath));
-
+  
           const response = await lastValueFrom(
             this.httpService.post(uploadUrl, formData, {
               headers: formData.getHeaders(),
             }),
           );
-
+  
           resolve({ chunk: chunkPath, response: response.data });
         } catch (error) {
           this.logger.error(`Error uploading chunk: ${error.message}`);
           reject(error);
         }
       });
-
+  
       uploadPromises.push(chunkPromise);
       console.log('chunkPromise', chunkPromise);
-
+  
       const endTime = startTime + Math.min(chunkDuration, totalDuration - startTime);
       segments.push({
         startAt: Math.floor(startTime * 1000), // store as milliseconds
@@ -137,11 +145,11 @@ export class AudioService {
         filePath: chunkPath,
         content: "", // Will be updated after upload
       });
-
+  
       startTime += chunkDuration;
       chunkIndex++;
     }
-
+  
     const results = await Promise.all(uploadPromises);
     results.forEach((result, index) => {
       if (result) {
@@ -150,7 +158,7 @@ export class AudioService {
         segments[index].summary = result.response.summary;
       }
     });
-
+  
     const noteTranscriptions = segments.map(segment => ({
       startAt: segment.startAt,
       endAt: segment.endAt,
@@ -159,62 +167,28 @@ export class AudioService {
       summary: segment.summary,
       note: { id: noteId },
     }));
-
+  
     await this.audioSegmentRepository.save(noteTranscriptions);
     console.log(segments);
     return segments;
   }
-  // async splitAndUpload(filePath: string, uploadUrl: string): Promise<any[]> {
-  //   const chunkDir = './uploads/chunks';
-  //   if (!existsSync(chunkDir)) {
-  //     mkdirSync(chunkDir, { recursive: true });
-  //   }
-
-  //   const chunkDuration = 60; // 1 minute
-  //   let startTime = 0;
-  //   let chunkIndex = 0;
-  //   const uploadResults: { chunk: string; response: any }[] = [];
-
-  //   const totalDuration = await this.getAudioDuration(filePath);
-
-  //   while (startTime < totalDuration) {
-  //     const chunkPath = `${chunkDir}/chunk-${chunkIndex}.wav`;
-
-  //     try {
-  //       await new Promise((resolve, reject) => {
-  //         ffmpeg(filePath)
-  //           .setStartTime(startTime)
-  //           .setDuration(Math.min(chunkDuration, totalDuration - startTime))
-  //           .output(chunkPath)
-  //           .on('end', resolve)
-  //           .on('error', reject)
-  //           .run();
-  //       });
-
-  //       if (!existsSync(chunkPath)) {
-  //         this.logger.warn(`Chunk file does not exist: ${chunkPath}`);
-  //         break;
-  //       }
-
-  //       const formData = new FormData();
-  //       formData.append('file', createReadStream(chunkPath));
-
-  //       const response = await lastValueFrom(
-  //         this.httpService.post(uploadUrl, formData, {
-  //           headers: formData.getHeaders(),
-  //         }),
-  //       );
-
-  //       uploadResults.push({ chunk: chunkPath, response: response.data });
-  //       startTime += chunkDuration;
-  //       chunkIndex++;
-  //     } catch (error) {
-  //       this.logger.error(`Splitting completed or an error occurred: ${error.message}`);
-  //       break;
-  //     }
-  //   }
-
-  //   return uploadResults;
-  // }
-
+  
+  async convertWebMToWav(inputPath: string, outputPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .toFormat('wav')
+        .audioCodec('pcm_s16le')
+        .audioChannels(1)
+        .audioFrequency(16000)
+        .on('end', () => {
+          this.logger.log(`Converted WebM to WAV: ${outputPath}`);
+          resolve();
+        })
+        .on('error', (err) => {
+          this.logger.error(`Conversion error: ${err.message}`);
+          reject(err);
+        })
+        .save(outputPath);
+    });
+  }
 }
