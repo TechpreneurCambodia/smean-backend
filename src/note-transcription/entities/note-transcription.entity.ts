@@ -6,7 +6,7 @@ export class NoteTranscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Note, note => note.transcriptions)
+  @ManyToOne(() => Note, note => note.transcriptions, { onDelete: 'CASCADE' })
   note: Note;
 
   @Column({name:'start_at', default: 0 })
