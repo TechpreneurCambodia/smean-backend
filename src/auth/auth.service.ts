@@ -10,6 +10,8 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { GoogleDto } from './dto/google.dto';
 import { FacebookDto } from './dto/facebook.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { UserDto } from 'src/user/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -119,7 +121,7 @@ export class AuthService {
     if (!getUser) {
       throw new NotFoundException('User not found');
     }
-    return getUser;
+    return plainToInstance(UserDto, getUser);
   }
 
   async verifyToken(token: string) {
