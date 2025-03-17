@@ -38,7 +38,7 @@ export class AuthService {
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async CreateOrSignInWithGoogle(googleDto: GoogleDto) : Promise<LoginResponseDto> {
@@ -65,7 +65,7 @@ export class AuthService {
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async login(loginAuthDto: LoginAuthDto): Promise<LoginResponseDto> {
@@ -87,7 +87,7 @@ export class AuthService {
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async register(createUserDto: CreateUserDto) {
