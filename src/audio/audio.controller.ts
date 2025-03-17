@@ -8,7 +8,8 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-  NotFoundException
+  NotFoundException,
+  Body
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AudioService } from './audio.service';
@@ -24,6 +25,7 @@ import { NoteSourceService } from 'src/note-source/note-source.service';
 import { CreateNoteSourceDto } from 'src/note-source/dto/create-note-source.dto';
 import { createReadStream } from 'fs';
 import { DataSource } from 'typeorm';
+import { SplitAndUpload } from 'src/note/dto/split-and-upload.dto';
 
 @Controller('audio')
 export class AudioController {
@@ -38,7 +40,7 @@ export class AudioController {
   // this endpoint upload to the flask api
   @HttpCode(HttpStatus.OK)
   @Post('upload')
-  // @UseGuards(AuthGuard) // Apply authentication middleware
+  @UseGuards(AuthGuard) 
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -123,17 +125,19 @@ export class AudioController {
       },
     }),
   )
-  async splitAndUpload(@UploadedFile() file: Express.Multer.File, @Request() req) {
-    let chunkDuration = Number(req.body.chunkDuration);
+  async splitAndUpload(@UploadedFile() file: Express.Multer.File, @Body() splitAndUpload: SplitAndUpload, @Request() req) {
+    let { title, chunkDuration } = splitAndUpload;
+
     if (!file) {
       return { message: 'No file uploaded' };
     }
+    chunkDuration = Number(chunkDuration);
 
     if (!chunkDuration) {
       chunkDuration = 60;
     }
-    if (![60, 180, 300].includes(chunkDuration)) {
-      throw new BadRequestException('Invalid segment duration. Choose 1, 3, or 5 minutes.');
+    if (![60, 180, 300, 600].includes(chunkDuration)) {
+      throw new BadRequestException('Invalid segment duration. Choose 1, 3, 5, or 10 minutes.');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -147,7 +151,7 @@ export class AudioController {
         noteType: "audio",
         sourceUrl: fileInfo.filePath,
         summary: "",
-        title: fileInfo.originalName,
+        title: title || file.originalname,
         transcription: "",
       };
 
