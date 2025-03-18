@@ -41,7 +41,7 @@ export class AuthController {
   @Get('/me')
   @UseGuards(AuthGuard)
   getMe(@Request() req) {
-    return this.authService.getMe(req.user.id);
+    return this.authService.getMe(req.user);
   }
 
   @Get("/google")

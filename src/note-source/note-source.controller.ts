@@ -1,16 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { NoteSourceService } from './note-source.service';
 import { CreateNoteSourceDto } from './dto/create-note-source.dto';
 import { UpdateNoteSourceDto } from './dto/update-note-source.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { CreateNoteDto } from 'src/note/dto/create-note.dto';
 
 @Controller('note-sources')
 @UsePipes(new ValidationPipe({ transform: true }))
 export class NoteSourceController {
   constructor(private readonly noteSourceService: NoteSourceService) {}
-
+  
   @Post()
-  create(@Body() createNoteSourceDto: CreateNoteSourceDto) {
-    return this.noteSourceService.create(createNoteSourceDto);
+  @UseGuards(AuthGuard)
+  create(@Request() req, @Body() createNoteSourceDto: CreateNoteSourceDto) {
+    const userId = req.user.id;
+    const noteSource = this.noteSourceService.create(createNoteSourceDto, userId);
+    return noteSource;
   }
 
   @Get()

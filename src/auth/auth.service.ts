@@ -10,6 +10,8 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { GoogleDto } from './dto/google.dto';
 import { FacebookDto } from './dto/facebook.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { UserDto } from 'src/user/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +38,7 @@ export class AuthService {
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async CreateOrSignInWithGoogle(googleDto: GoogleDto) : Promise<LoginResponseDto> {
@@ -63,7 +65,7 @@ export class AuthService {
     });
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async login(loginAuthDto: LoginAuthDto): Promise<LoginResponseDto> {
@@ -76,7 +78,7 @@ export class AuthService {
     const isMatch = user.password ? await bcrypt.compare(loginAuthDto.password, user.password) : false;
     if (!isMatch) {
 
-      throw new UnauthorizedException('Invalid Email/Username or Password');
+      throw new BadRequestException('Invalid Email/Username or Password');
     }
     const payload = { id: user.id, email: user.email, role: user.role }
     const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
@@ -85,7 +87,7 @@ export class AuthService {
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
-    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK);
+    return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
   async register(createUserDto: CreateUserDto) {
@@ -119,7 +121,7 @@ export class AuthService {
     if (!getUser) {
       throw new NotFoundException('User not found');
     }
-    return getUser;
+    return plainToInstance(UserDto, getUser);
   }
 
   async verifyToken(token: string) {

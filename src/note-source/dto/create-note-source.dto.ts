@@ -1,4 +1,6 @@
-import { IsEnum, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsString, IsUrl, ValidateNested } from 'class-validator';
+import { CreateNoteDto } from 'src/note/dto/create-note.dto';
 
 export class CreateNoteSourceDto {
     @IsNotEmpty()
@@ -19,5 +21,12 @@ export class CreateNoteSourceDto {
     @IsNotEmpty()
     @IsString()
     transcription: string;
+
+    // @ValidateNested()
+    // @Type(() => CreateNoteDto)
+    // note: CreateNoteDto;
+
+    @IsString()
+    summary: string;
 
 }

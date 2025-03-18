@@ -12,8 +12,18 @@ import { NoteSourceModule } from './note-source/note-source.module';
 import { NoteTranscriptionModule } from './note-transcription/note-transcription.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LabelsController } from './labels/labels.controller';
+import { LabelsModule } from './labels/labels.module';
+import { HttpModule } from '@nestjs/axios';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), 
+      serveRoot: '/media/uploads',
+    }),
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -38,8 +48,10 @@ import { AppService } from './app.service';
     NoteModule,
     NoteSourceModule,
     NoteTranscriptionModule,
+    LabelsModule,
+    HttpModule,
   ],
-  controllers: [AppController, UserController, AuthController, AudioController],
+  controllers: [AppController, UserController, AuthController, AudioController, LabelsController],
   providers: [AppService],
 })
 export class AppModule {}
