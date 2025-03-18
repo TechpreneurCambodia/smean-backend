@@ -78,7 +78,7 @@ export class AuthService {
     const isMatch = user.password ? await bcrypt.compare(loginAuthDto.password, user.password) : false;
     if (!isMatch) {
 
-      throw new UnauthorizedException('Invalid Email/Username or Password');
+      throw new BadRequestException('Invalid Email/Username or Password');
     }
     const payload = { id: user.id, email: user.email, role: user.role }
     const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
