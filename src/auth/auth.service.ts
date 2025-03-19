@@ -17,10 +17,9 @@ import { UserDto } from 'src/user/dto/user.dto';
 export class AuthService {
   constructor(private userService: UserService, @InjectRepository(User) private userRepository: Repository<User>, private jwtService: JwtService) { }
 
-  async CreateOrSignInWithFacebook(facebookDto: FacebookDto): Promise<LoginResponseDto>  {
+  async CreateOrSignInWithFacebook(facebookDto: FacebookDto): Promise<LoginResponseDto> {
     let user = await this.userRepository.findOne({ where: { facebookId: facebookDto.facebookId } });
     if (!user) {
-      // Create a new user if not found
       user = this.userRepository.create(facebookDto);
     } else {
       user.firstName = facebookDto.firstName;
@@ -28,7 +27,8 @@ export class AuthService {
       user.accessToken = facebookDto.accessToken;
     }
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const userDto = plainToInstance(UserDto, user);
+    const payload = { user: userDto }
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
     });
@@ -41,7 +41,7 @@ export class AuthService {
     return new LoginResponseDto('Logged in Successfully', token, refreshToken, HttpStatus.OK, plainToInstance(UserDto, user));
   }
 
-  async CreateOrSignInWithGoogle(googleDto: GoogleDto) : Promise<LoginResponseDto> {
+  async CreateOrSignInWithGoogle(googleDto: GoogleDto): Promise<LoginResponseDto> {
     let user = await this.userRepository.findOne({
       where: [{ username: googleDto.email }, { email: googleDto.email }],
     });
@@ -54,8 +54,8 @@ export class AuthService {
       user.profilePicUrl = googleDto.profilePicUrl;
       // user.accessToken = googleDto.accessToken;
     }
-
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const userDto = plainToInstance(UserDto, user);
+    const payload = { user: userDto }
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
     });
@@ -80,7 +80,8 @@ export class AuthService {
 
       throw new BadRequestException('Invalid Email/Username or Password');
     }
-    const payload = { id: user.id, email: user.email, role: user.role }
+    const userDto = plainToInstance(UserDto, user);
+    const payload = { user: userDto }
     const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: process.env.REFRESH_EXPIRE, secret: process.env.REFRESH_SECRET, });
 
@@ -100,8 +101,8 @@ export class AuthService {
 
     const user = await this.userService.create(createUserDto);
 
-    const payload = { id: user.id, email: user.email, role: user.role };
-
+    const userDto = plainToInstance(UserDto, user);
+    const payload = { user: userDto }
     const token = this.jwtService.sign(payload, { expiresIn: process.env.ACCESS_EXPIRE, secret: process.env.SECRET_KEY, });
 
     const refreshToken = this.jwtService.sign(payload, { expiresIn: process.env.REFRESH_EXPIRE, secret: process.env.REFRESH_SECRET, });
@@ -173,7 +174,7 @@ export class AuthService {
       await this.userRepository.save(user);
     }
 
-    return { message: 'Logged out successfully' , statusCode: HttpStatus.OK};
+    return { message: 'Logged out successfully', statusCode: HttpStatus.OK };
   }
 
 }

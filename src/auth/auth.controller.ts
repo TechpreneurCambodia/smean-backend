@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request, ValidationPipe, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Request, ValidationPipe, UsePipes, Response, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
@@ -41,16 +41,19 @@ export class AuthController {
   @Get('/me')
   @UseGuards(AuthGuard)
   getMe(@Request() req) {
-    return this.authService.getMe(req.user);
+    console.log('tt', req.user);
+    return req.user;
   }
 
   @Get("/google")
   @UseGuards(GoogleOAuthGuard)
-  async googleAuth(@Request() req) { }
+  async googleAuth(@Request() req) {
+
+  }
 
   @Get('/google/callback')
   @UseGuards(GoogleOAuthGuard)
-  googleAuthRedirect(@Request() req) {
+  async googleAuthRedirect(@Request() req, @Response() res) {
     const user = req.user;
     const googleDto = new GoogleDto();
     googleDto.email = user.email;
@@ -59,8 +62,10 @@ export class AuthController {
     googleDto.profilePicUrl = user.picture;
     googleDto.accessToken = user.accessToken;
     googleDto.username = user.email;
-    const response = this.authService.CreateOrSignInWithGoogle(googleDto);
-    return response;
+    await this.authService.CreateOrSignInWithGoogle(googleDto).then((response) => {
+
+      res.redirect(`${process.env.FRONTEND_URL}/auth/social?token=${response.access_token}&refreshToken=${response.refresh_token}&user=${JSON.stringify(response.user)}`);
+    });
   }
   @Get("/facebook")
   @UseGuards(FacebookOAuthGuard)
