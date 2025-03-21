@@ -41,7 +41,6 @@ export class AuthController {
   @Get('/me')
   @UseGuards(AuthGuard)
   getMe(@Request() req) {
-    console.log('tt', req.user);
     return req.user;
   }
 
@@ -74,16 +73,23 @@ export class AuthController {
 
   @Get("/facebook/callback")
   @UseGuards(FacebookOAuthGuard)
-  async facebookLoginRedirect(@Request() req) {
+  async facebookLoginRedirect(@Request() req, @Response() res) {
     const user = req.user;
     const facebookDto = new FacebookDto();
     facebookDto.facebookId = user.id;
-    facebookDto.email = user.email;
+    if (facebookDto.email !== null)
+      facebookDto.email = user.email;
+    facebookDto.username = user.username;
     facebookDto.firstName = user.firstName;
     facebookDto.lastName = user.lastName;
     facebookDto.accessToken = user.accessToken;
-    const response = this.authService.CreateOrSignInWithFacebook(facebookDto);
-    return response;
+
+    await this.authService.CreateOrSignInWithFacebook(facebookDto).then((response) => {
+
+      res.redirect(`${process.env.FRONTEND_URL}/auth/social?token=${response.access_token}&refreshToken=${response.refresh_token}&user=${JSON.stringify(response.user)}`);
+    });
   }
+
+  
 
 }
