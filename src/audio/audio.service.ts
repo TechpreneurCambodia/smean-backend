@@ -81,8 +81,8 @@ export class AudioService {
   
     // 🛑 Convert WebM to WAV first, if needed
     let processedFilePath = filePath;
-    if (filePath.endsWith('.webm')) {
-      const wavFilePath = filePath.replace('.webm', '.wav');
+    if (filePath.endsWith('.webm')||filePath.endsWith('.ogg')) {
+      const wavFilePath = filePath.replace(/\.(webm|ogg)$/, '.wav');
       await this.convertWebMToWav(filePath, wavFilePath);
       processedFilePath = wavFilePath;
     }
